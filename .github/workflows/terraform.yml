@@ -1,0 +1,93 @@
+name: terraform
+
+# main ブランチへのPull Request と Merge をトリガーに指定
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# 作業ディレクトリの指定
+defaults:
+  run:
+    working-directory: ./
+
+# ジョブ / ステップ / アクションの定義
+jobs:
+  terraform-workflow:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    # Workload Identity 連携
+    steps:
+      # https://cloud.google.com/iam/docs/using-workload-identity-federation#generate-automatic
+      - uses: actions/checkout@v3
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: 'projects/524220704155/locations/global/workloadIdentityPools/my-wif-pool/providers/my-wif-provider'
+          service_account: 'terraform-github@workload-idenity-federation.iam.gserviceaccount.com'
+
+      # https://github.com/hashicorp/setup-terraform
+      - uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        continue-on-error: true
+
+      - name: Comment Terraform Plan
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+            </details>
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            <details><summary>Show Plan</summary>
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+            </details>
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      # main ブランチに push した場合にだけ terraform apply も実行される
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
