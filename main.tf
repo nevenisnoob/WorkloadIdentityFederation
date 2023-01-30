@@ -38,6 +38,20 @@ resource "google_project_service" "enable_api" {
   disable_dependent_services = true
 }
 
+# wif正しく実行するために、terraform用のsaに以下の権限を付与する必要があります
+resource "google_project_iam_member" "terraform_sa_role" {
+  for_each = toset([
+    "roles/storage.admin",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/serviceusage.serviceUsageViewer",
+    "roles/iam.serviceAccountViewer",
+    "roles/iam.workloadIdentityPoolAdmin"
+  ])
+  project = local.project_id
+  role    = each.value
+  member  = "serviceAccount:${data.google_service_account.terraform_sa.email}"
+}
+
 # Workload Identity Pool 設定
 resource "google_iam_workload_identity_pool" "my-wif-pool" {
     provider                  = google-beta
