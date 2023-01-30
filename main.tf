@@ -49,7 +49,7 @@ resource "google_project_iam_member" "terraform_sa_role" {
   ])
   project = local.project_id
   role    = each.value
-  member  = "serviceAccount:${data.google_service_account.terraform_sa.email}"
+  member  = "serviceAccount:${google_service_account.terraform-sa.email}"
 }
 
 # Workload Identity Pool 設定
