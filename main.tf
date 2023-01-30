@@ -7,6 +7,7 @@ locals {
 
     # api 有効化用
     services = toset([                         # Workload Identity 連携用
+        "storage.googleapis.com",              # Terraform state
         "iam.googleapis.com",                  # IAM
         "cloudresourcemanager.googleapis.com", # Resource Manager
         "iamcredentials.googleapis.com",       # Service Account Credentials
@@ -23,10 +24,6 @@ terraform {
         }
     }
     required_version = ">= 1.3.0"
-    backend "gcs" {
-        bucket = "wif_terraform_tfstate"
-        prefix = "terraform/state"
-    }
 }
 
 ## API の有効化(Workload Identity 用)
