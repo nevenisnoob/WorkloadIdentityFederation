@@ -7,7 +7,6 @@ locals {
 
     # api 有効化用
     services = toset([                         # Workload Identity 連携用
-        "storage.googleapis.com",              # Terraform state
         "iam.googleapis.com",                  # IAM
         "cloudresourcemanager.googleapis.com", # Resource Manager
         "iamcredentials.googleapis.com",       # Service Account Credentials
@@ -87,7 +86,7 @@ data "google_service_account" "terraform-sa" {
 
 
 # サービスアカウントの IAM Policy 設定と GitHub リポジトリの指定
-resource "google_service_account_iam_member" "terraform-sa" {
+resource "google_service_account_iam_member" "terraform_sa" {
     service_account_id = data.google_service_account.terraform-sa.id
     role               = "roles/iam.workloadIdentityUser"
     member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.my-wif-pool.name}/attribute.repository/${local.github_repository}"
