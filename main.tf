@@ -7,6 +7,7 @@ locals {
 
     # api 有効化用
     services = toset([                         # Workload Identity 連携用
+        "storage.googleapis.com",              # Terraform state
         "iam.googleapis.com",                  # IAM
         "cloudresourcemanager.googleapis.com", # Resource Manager
         "iamcredentials.googleapis.com",       # Service Account Credentials
