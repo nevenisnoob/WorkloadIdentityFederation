@@ -24,6 +24,10 @@ terraform {
         }
     }
     required_version = ">= 1.3.0"
+    backend "gcs" {
+        bucket = "wif_terraform_tfstate"
+        prefix = "terraform/state"
+    }
 }
 
 ## API の有効化(Workload Identity 用)
