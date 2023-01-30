@@ -65,7 +65,6 @@ resource "google_iam_workload_identity_pool_provider" "my-wif-provider" {
 # GitHub Actions が借用するサービスアカウント
 data "google_service_account" "terraform_sa" {
     account_id = local.terraform_service_account
-    display_name = "GitHub Actions用ServiceAccount"
 }
 
 # 権限付与
@@ -75,12 +74,12 @@ resource "google_project_iam_member" "terraform_sa_role" {
   ])
   project = local.project_id
   role   = each.value
-  member = "serviceAccount:${google_service_account.gke_node_pool.email}"
+  member = "serviceAccount:${data.google_service_account.terraform_sa.email}"
 }
 
 # サービスアカウントの IAM Policy 設定と GitHub リポジトリの指定
 resource "google_service_account_iam_member" "terraform_sa" {
-    service_account_id = data.google_service_account.terraform_service_account.id
+    service_account_id = data.google_service_account.terraform_sa.id
     role               = "roles/iam.workloadIdentityUser"
     member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.mypool.name}/attribute.repository/${local.github_repository}"
 }
