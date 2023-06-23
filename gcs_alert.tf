@@ -1,3 +1,4 @@
+
 resource "google_project_iam_custom_role" "terraform-ci" {
   title       = "TerraformCI"
   role_id     = "Terraform CI Custom Role"
@@ -38,7 +39,7 @@ resource "google_monitoring_alert_policy" "alert_gcs_with_call_ip" {
         "protoPayload.authorizationInfo.permission = \"storage.objects.create\" OR ",
         "protoPayload.authorizationInfo.permission = \"storage.objects.delete\") AND ",
         "NOT (",
-        "${join(" OR ", formatlist("ip_in_net(protoPayload.requestMetadata.callerIp, \"%s\")", var.valid_caller_ips))}",
+        "${join(" OR ", formatlist("ip_in_net(protoPayload.requestMetadata.callerIp, \"%s\")", local.valid_caller_ips))}",
         ")",
       ])
     }
