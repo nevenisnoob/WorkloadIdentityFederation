@@ -11,7 +11,8 @@ resource "google_project_iam_custom_role" "terraform-ci" {
 
 resource "google_project_iam_member" "terraform-role" {
   project = local.project_id
-  role    = google_project_iam_custom_role.terraform-ci.id
+#  role    = google_project_iam_custom_role.terraform-ci.id
+  role = "roles/monitoring.editor"
   member  = "serviceAccount:${data.google_service_account.terraform-sa.email}"
 }
 
