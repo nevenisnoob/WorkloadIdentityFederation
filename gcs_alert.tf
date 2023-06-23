@@ -1,20 +1,18 @@
+#resource "google_project_iam_custom_role" "terraform-ci" {
+#  role_id     = "TerraformCI"
+#  title       = "Terraform CI Custom Role"
+#  description = "TerraformCIのCustomRole"
+#  stage       = "ALPHA"
+#  permissions = [
+#    "resourcemanager.projects.getIamPolicy",
+#  ]
+#}
 
-resource "google_project_iam_custom_role" "terraform-ci" {
-  role_id     = "TerraformCI"
-  title       = "Terraform CI Custom Role"
-  description = "TerraformCIのCustomRole"
-  stage       = "ALPHA"
-  permissions = [
-    "resourcemanager.projects.getIamPolicy",
-  ]
-}
-
-resource "google_project_iam_member" "terraform-role" {
-  project = local.project_id
+#resource "google_project_iam_member" "terraform-role" {
+#  project = local.project_id
 #  role    = google_project_iam_custom_role.terraform-ci.id
-  role = "roles/monitoring.editor"
-  member  = "serviceAccount:${data.google_service_account.terraform-sa.email}"
-}
+#  member  = "serviceAccount:${data.google_service_account.terraform-sa.email}"
+#}
 
 
 resource "google_project_iam_audit_config" "enable_gcs_logging" {
