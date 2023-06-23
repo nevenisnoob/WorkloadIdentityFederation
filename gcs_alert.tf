@@ -1,7 +1,7 @@
 
 resource "google_project_iam_custom_role" "terraform-ci" {
-  title       = "TerraformCI"
-  role_id     = "Terraform CI Custom Role"
+  role_id     = "TerraformCI"
+  title       = "Terraform CI Custom Role"
   description = "TerraformCIのCustomRole"
   stage       = "ALPHA"
   permissions = [
@@ -17,7 +17,7 @@ resource "google_project_iam_member" "terraform-role" {
 
 
 resource "google_project_iam_audit_config" "enable_gcs_logging" {
-  project = var.project_id
+  project = local.project_id
   service = "storage.googleapis.com"
   audit_log_config {
     log_type = "DATA_READ"
