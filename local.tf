@@ -13,4 +13,8 @@ locals {
     "iamcredentials.googleapis.com",       # Service Account Credentials
     "sts.googleapis.com"                   # Security Token Service API
   ])
+
+  valid_caller_ips = [
+    "10.236.41.187/32", # gotdev5002 ip address: 10.236.41.187（動的に変わることがあるので要注意）
+  ]
 }
