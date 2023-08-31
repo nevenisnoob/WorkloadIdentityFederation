@@ -1,0 +1,47 @@
+# This is a basic workflow to help you get started with Actions
+
+name: gcp-monitor
+
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onschedule
+  schedule:
+    - cron: '0 23 * * 1'
+    - cron: '0 23 * * 2'
+    - cron: '0 23 * * 3'
+    - cron: '0 23 * * 4'
+    - cron: '0 23 * * 5'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "monitoring"
+  monitoring:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v1.1.1
+        
+      # Runs a single command using the runners shell
+      - name: Get the date
+        id: date
+        # 今日の日付　YYYY-MM-DD
+        run: echo "::set-output name=date::$(date -d '1 day ago' +'%Y-%m-%d')"
+        shell: bash
+
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: |
+          gcloud asset search-all-resources \
+            --scope=projects/dena-mbga-devsb-gcp \
+            --order-by="updateTime DESC, assetType" \
+            --query="updateTime>=${{ steps.date.outputs.date }} OR createTime>=${{ steps.date.outputs.date }}" \
+            --format="json(name, displayName, assetType, project, createTime, updateTime)"
+
+      - name: send monitoring result to slack
+        run: echo "send monitoring result to slack"
