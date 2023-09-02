@@ -38,13 +38,12 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          echo $TERRAFORM_SERVICE_ACCOUNT_KEY > terraform_sa_key.json
+          echo '${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}' > terraform_sa_key.json
           gcloud auth login --cred-file=terraform_sa_key.json
           gcloud asset search-all-resources \
             --scope=projects/dena-mbga-devsb-gcp \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.date.outputs.date }} OR createTime>=${{ steps.date.outputs.date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)"
-
       - name: send monitoring result to slack
         run: echo "send monitoring result to slack"
