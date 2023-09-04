@@ -61,20 +61,4 @@ jobs:
       - name: verify monitoring result
         run: echo "${{ steps.gcp_monitoring.outputs.monitor_result }}"
       - name: send monitoring result to slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "```${{ steps.gcp_monitoring.outputs.monitor_result }}```"
-                    }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        run: curl -X POST -H 'Content-type:application/json' --data "{"text":"${{ steps.gcp_monitoring.outputs.monitor_result }}"}" ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
