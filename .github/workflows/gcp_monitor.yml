@@ -41,7 +41,7 @@ jobs:
           echo '${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}' > terraform_sa_key.json
           gcloud auth login --cred-file=terraform_sa_key.json
           gcloud asset search-all-resources \
-            --scope=projects/dena-mbga-devsb-gcp \
+            --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.date.outputs.date }} OR createTime>=${{ steps.date.outputs.date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)"
