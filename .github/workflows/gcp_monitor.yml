@@ -51,13 +51,12 @@ jobs:
       - name: search for all gcp resources
         id: gcp_monitoring
         run: |
-          echo 'monitor_result<<EOF' >> $GITHUB_OUTPUT
-          gcloud asset search-all-resources \
+          MONITOR_RESULT="$(gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
-            --format="json(name, displayName, assetType, project, createTime, updateTime)" >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+            --format="json(name, displayName, assetType, project, createTime, updateTime)")"
+          echo "monitor_result=$MONITOR_RESULT" >> $GITHUB_OUTPUT
       - name: verify monitoring result
         run: echo "${{ steps.gcp_monitoring.outputs.monitor_result }}"
       - name: send monitoring result to slack
