@@ -61,15 +61,15 @@ jobs:
         with:
           payload: |
             {
-            	"blocks": [
-            		{
-            			"type": "section",
-            			"text": {
-            				"type": "mrkdwn",
-            				"text": "```${{ steps.gcp_monitoring.outputs.monitor_result }}```"
-            			}
-            		}
-            	]
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "```${{ steps.gcp_monitoring.outputs.monitor_result }}```"
+                    }
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
