@@ -55,7 +55,9 @@ jobs:
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          echo "::set-output name=monitor_result::$MONITOR_RESULT"
+          echo 'monitor_result<<EOF' >> $GITHUB_OUTPUT
+          $MONITOR_RESULT >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
