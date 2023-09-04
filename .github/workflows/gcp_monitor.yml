@@ -46,6 +46,7 @@ jobs:
         shell: bash
 
       # Runs a set of commands using the runners shell
+      # https://stackoverflow.com/a/74232400
       - name: search for all gcp resources
         id: gcp_monitoring
         run: |
@@ -54,7 +55,7 @@ jobs:
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          echo "monitor_result=$MONITOR_RESULT" >> $GITHUB_OUTPUT
+          echo "monitor_result<<EOF"$'\n'"$MONITOR_RESULT"$'\n'EOF >> $GITHUB_OUTPUT
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
