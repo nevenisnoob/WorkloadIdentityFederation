@@ -59,7 +59,7 @@ jobs:
             --format="json(name, displayName, assetType, project, createTime, updateTime)" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
       - name: verify monitoring result
-        run: echo ${{ steps.gcp_monitoring.outputs.monitor_result }}
+        run: echo "${{ steps.gcp_monitoring.outputs.monitor_result }}"
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
