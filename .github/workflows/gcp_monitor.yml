@@ -55,10 +55,10 @@ jobs:
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          echo "monitor_result<<EOF"$'\n'"$MONITOR_RESULT"$'\n'EOF >> $GITHUB_OUTPUT
+          echo "monitor_result="$MONITOR_RESULT" >> $GITHUB_OUTPUT
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          slack-message: ${{steps.gcp_monitoring.outputs.monitor_result}}
+          slack-message: "the monitoring result is: \n${{steps.gcp_monitoring.outputs.monitor_result}}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
