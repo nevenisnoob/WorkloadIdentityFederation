@@ -51,13 +51,30 @@ jobs:
       - name: search for all gcp resources
         id: gcp_monitoring
         run: |
-          MONITOR_RESULT="$(gcloud asset search-all-resources \
+          echo 'MONITOR_RESULT<<EOF' >> $GITHUB_OUTPUT
+          gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
-            --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
-            --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          echo "monitor_result=$MONITOR_RESULT" >> $GITHUB_OUTPUT
+            --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo $MONITOR_RESULT
       - name: verify monitoring result
         run: echo "${{ steps.gcp_monitoring.outputs.monitor_result }}"
       - name: send monitoring result to slack
-        run: curl -X POST -H 'Content-type:application/json' --data "{"text":"${{ steps.gcp_monitoring.outputs.monitor_result }}"}" ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "```${{ steps.gcp_monitoring.outputs.monitor_result }}```"
+                    }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
