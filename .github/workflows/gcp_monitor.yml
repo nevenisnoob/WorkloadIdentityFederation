@@ -42,13 +42,13 @@ jobs:
         shell: bash
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: search for all gcp resources
         id: gcp_monitoring
         run: |
           MONITOR_RESULT='gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
-            --query="updateTime>=${{ steps.past_date.outputs.past_date }} OR createTime>=${{ steps.past_date.outputs.past_date }}" \
+            --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)"'
           echo "monitor_result=$MONITOR_RESULT" >> $GITHUB_OUTPUT
       - name: send monitoring result to slack
