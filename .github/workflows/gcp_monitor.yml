@@ -70,7 +70,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "```${{ steps.gcp_monitoring.outputs.monitor_result }}```"
+                    "text": "```hello world\nhello world```"
                     }
                 }
               ]
