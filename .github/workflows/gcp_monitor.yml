@@ -25,6 +25,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1.1.1
         with:
           service_account_key: ${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}
+          export_default_credentials: true
       # Runs a single command using the runners shell
       - name: Get the date
         id: get_date
