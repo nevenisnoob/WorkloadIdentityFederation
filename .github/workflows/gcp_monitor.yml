@@ -55,6 +55,6 @@ jobs:
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload: ${{steps.gcp_monitoring.outputs.monitor_result}}
+          slack-message: ${{steps.gcp_monitoring.outputs.monitor_result}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }}
