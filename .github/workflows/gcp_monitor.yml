@@ -47,16 +47,16 @@ jobs:
 
       # Runs a set of commands using the runners shell
       # https://stackoverflow.com/a/74232400
+      # https://github.com/github/docs/issues/21529
       - name: search for all gcp resources
         id: gcp_monitoring
         run: |
-          MONITOR_RESULT="$(gcloud asset search-all-resources \
+          echo 'monitor_result<<EOF' >> $GITHUB_OUTPUT
+          gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
-            --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          echo 'monitor_result<<EOF' >> $GITHUB_OUTPUT
-          $MONITOR_RESULT >> $GITHUB_OUTPUT
+            --format="json(name, displayName, assetType, project, createTime, updateTime)" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
       - name: send monitoring result to slack
         uses: slackapi/slack-github-action@v1.24.0
