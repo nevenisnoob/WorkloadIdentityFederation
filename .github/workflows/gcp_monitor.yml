@@ -43,6 +43,7 @@ jobs:
             PAST_DATE=$(date -d "1 day ago" '+%Y-%m-%d')
           fi
           echo "past_date=$PAST_DATE" >> $GITHUB_OUTPUT
+          echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         shell: bash
 
       # Runs a set of commands using the runners shell
@@ -51,9 +52,13 @@ jobs:
       - name: search for all gcp resources
         id: gcp_monitoring
         run: |
-          MONITOR_RESULT="$(gcloud asset search-all-resources \
+          RESOURCES_MONITOR_RESULT="$(gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          gcloud pubsub topics publish projects/workload-idenity-federation/topics/cloud-asset-inventory --message "$MONITOR_RESULT"
+          gcloud pubsub topics publish projects/workload-idenity-federation/topics/cloud-asset-inventory --message "$RESOURCES_MONITOR_RESULT"
+      - name: search for all iam policies and send to gcs
+        run: |
+          gcloud asset search-all-iam-policies --scope=projects/workload-idenity-federation --format=json | jq '.' > iam-policies-${{ steps.get_date.outputs.current_date }}.json
+          gsutil cp iam-policies-${{ steps.get_date.outputs.current_date }}.json gs://workload-idenity-federation-cloud-asset-inventory
