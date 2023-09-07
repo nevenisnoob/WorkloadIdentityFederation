@@ -48,7 +48,7 @@ jobs:
       - name: search for all iam policies and send to gcs
         run: |
           gcloud asset search-all-iam-policies --scope=projects/workload-idenity-federation --format=json | jq '.' > iam-policies-${{ steps.get_date.outputs.current_date }}.json
-          gsutil cp iam-policies-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-dena-mbga-dev-gcp
+          gsutil cp iam-policies-${{ steps.get_date.outputs.current_date }}.json gs://workload-idenity-federation-cloud-asset-inventory
       # Runs a set of commands using the runners shell
       # https://stackoverflow.com/a/74232400
       # https://github.com/github/docs/issues/21529
