@@ -11,6 +11,12 @@ def gcp_resources_modification_summary(resources_data)
   resources_array = []
   # TODO change projectId
   resources_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったResources"))
+  if resources_data.empty?
+    resource_markdown_text = "*なし*"
+    resources_array.push(slack_block_section(resource_markdown_text))
+    resources_array.push(slack_block_divider())
+    return resources_array
+  end
   resources_json = JSON.parse(resources_data)
   if resources_json.empty?
     resource_markdown_text = "*なし*"
