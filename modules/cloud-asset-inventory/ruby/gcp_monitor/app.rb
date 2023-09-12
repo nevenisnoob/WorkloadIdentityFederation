@@ -11,7 +11,7 @@ def gcp_resources_modification_summary(resources_data)
   resources_array = []
   # TODO change projectId
   resources_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったResources"))
-  if resources_data.empty?
+  if !resources_data
     resource_markdown_text = "*なし*"
     resources_array.push(slack_block_section(resource_markdown_text))
     resources_array.push(slack_block_divider())
@@ -148,7 +148,7 @@ resources_diff = ARGV[0]
 
 puts "resources_diff is #{resources_diff}"
 
-slack_endpoint = "https://hooks.slack.com/services/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"
+slack_endpoint = "https://hooks.slack.com/services/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"
 
 resources_info = gcp_resources_modification_summary(resources_diff)
 # iam_policies_info = gcp_iam_policies_modification_summary()
