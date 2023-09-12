@@ -1,0 +1,8 @@
+source "https://rubygems.org"
+
+# Include the Ruby Functions Framework as a dependency.
+gem 'hashdiff', '~> 1.0.1'
+gem 'slack-notifier', '~> 2.4'
+
+# Other function dependencies, for example:
+# gem "package", "~> version"

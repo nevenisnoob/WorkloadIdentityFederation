@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    hashdiff (1.0.1)
+    slack-notifier (2.4.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  hashdiff (~> 1.0.1)
+  slack-notifier (~> 2.4)
+
+BUNDLED WITH
+   2.1.4
