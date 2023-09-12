@@ -79,4 +79,4 @@ jobs:
           # なぜかcacheを使うとエラーになる
           # bundler-cache: true
           working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
-      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/gcp_monitor/app.rb ${{ steps.get_resources_diff.outputs.resources_diff }}
+      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ steps.get_resources_diff.outputs.resources_diff }}
