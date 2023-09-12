@@ -76,6 +76,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          # なぜかcacheを使うとエラーになる
           # bundler-cache: true
-          # working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
+          working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
       - run: bundle exec ruby app.rb ${{ steps.get_resources_diff.outputs.resources_diff }}
