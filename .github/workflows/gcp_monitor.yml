@@ -16,6 +16,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/modules/cloud-asset-inventory/gcp_monitor/
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -25,7 +27,7 @@ jobs:
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}'
-      
+
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1.1.1'
 
@@ -45,19 +47,35 @@ jobs:
           echo "past_date=$PAST_DATE" >> $GITHUB_OUTPUT
           echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         shell: bash
-      - name: search for all iam policies and send to gcs
-        run: |
-          gcloud asset search-all-iam-policies --scope=projects/workload-idenity-federation --format=json | jq '.' > iam-policies-${{ steps.get_date.outputs.current_date }}.json
-          gsutil cp iam-policies-${{ steps.get_date.outputs.current_date }}.json gs://workload-idenity-federation-cloud-asset-inventory
-      # Runs a set of commands using the runners shell
-      # https://stackoverflow.com/a/74232400
-      # https://github.com/github/docs/issues/21529
+      # - name: search for all iam policies
+      #   id: get_current_iam_policies
+      #   run: |
+      #     CURRENT_IAM_POLICIES="$(gcloud asset search-all-iam-policies --scope=projects/workload-idenity-federation --format=json)"
+      #     $CURRENT_IAM_POLICIES > cloud-asset-inventory/workload-idenity-federation/iam-policies-${{ steps.get_date.outputs.current_date }}.json
+      #     echo "current_iam_policies=$CURRENT_IAM_POLICIES" >> $GITHUB_OUTPUT
+      # - name: upload current iam policies file
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: iam-policies-${{ steps.get_date.outputs.current_date }}
+      #     path: cloud-asset-inventory/workload-idenity-federation/iam-policies-${{ steps.get_date.outputs.current_date }}.json
+      # # Runs a set of commands using the runners shell
+      # # https://stackoverflow.com/a/74232400
+      # # https://github.com/github/docs/issues/21529
+      # - name: get previous iam policies file
+      # - name: iam policies diff summary
       - name: search for all gcp resources
-        id: gcp_monitoring
+        id: get_resources_diff
         run: |
           RESOURCES_MONITOR_RESULT="$(gcloud asset search-all-resources \
             --scope=projects/workload-idenity-federation \
             --order-by="updateTime DESC, assetType" \
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
-          gcloud pubsub topics publish projects/workload-idenity-federation/topics/cloud-asset-inventory --message "$RESOURCES_MONITOR_RESULT"
+          echo "resources_diff=$RESOURCES_MONITOR_RESULT" >> GITHUB_OUTPUT
+      - name: diff_processing
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/gcp_monitor
+      - run: bundle exec ruby app.rb ${{ steps.get_resources_diff.outputs.resources_diff }}
