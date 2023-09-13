@@ -83,4 +83,4 @@ jobs:
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
           working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
-      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ steps.get_current_iam_policies.file_path }} ${{ steps.download.outputs.download-path }}/iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
+      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ steps.get_current_iam_policies.outputs.file_path }} ${{ steps.download.outputs.download-path }}/iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
