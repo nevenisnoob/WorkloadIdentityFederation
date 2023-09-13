@@ -159,3 +159,6 @@ asset_modification_summary = resources_info + iam_policies_info
 
 notifier = Slack::Notifier.new slack_endpoint
 notifier.post(blocks: asset_modification_summary)
+
+# for Test
+# bundle exec ruby app.rb https://hooks.slack.com/services/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 []
