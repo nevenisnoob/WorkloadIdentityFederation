@@ -47,7 +47,7 @@ jobs:
         id: get_current_iam_policies
         run: |
           CURRENT_IAM_POLICIES="$(gcloud asset search-all-iam-policies --scope=projects/workload-idenity-federation --format=json)"
-          $CURRENT_IAM_POLICIES > cloud-asset-inventory/workload-idenity-federation/iam-policies-${{ steps.get_date.outputs.current_date }}.json
+          echo $CURRENT_IAM_POLICIES > cloud-asset-inventory/workload-idenity-federation/iam-policies-${{ steps.get_date.outputs.current_date }}.json
           echo "current_iam_policies=$CURRENT_IAM_POLICIES" >> $GITHUB_OUTPUT
       - name: upload current iam policies file
         uses: actions/upload-artifact@v3
