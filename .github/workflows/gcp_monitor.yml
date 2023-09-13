@@ -57,7 +57,14 @@ jobs:
       # Runs a set of commands using the runners shell
       # https://stackoverflow.com/a/74232400
       # https://github.com/github/docs/issues/21529
-      # - name: get previous iam policies file
+      - name: get previous iam policies file
+        uses: actions/download-artifact@v3
+        with:
+          name: iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}
+          path: cloud-asset-inventory/workload-idenity-dederation
+      - name: display downloaded files
+        run: ls -R
+        working-directory: cloud-asset-inventory/workload-idenity-dederation
       # - name: iam policies diff summary
       - name: search for all gcp resources
         id: get_resources_diff
