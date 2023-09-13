@@ -144,11 +144,13 @@ def slack_block_section(text)
   }
 end
 
-resources_diff = ARGV[0]
+# we can not include slack incoming webhook in sourcecode for security reasons,
+# also the webhook would be revoked immediately when you commit it to github(interesting spec.)
+slack_endpoint = ARGV[0]
+
+resources_diff = ARGV[1]
 
 puts "resources_diff is #{resources_diff}"
-
-slack_endpoint = "https://hooks.slack.com/services/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"
 
 resources_info = gcp_resources_modification_summary(resources_diff)
 # iam_policies_info = gcp_iam_policies_modification_summary()
