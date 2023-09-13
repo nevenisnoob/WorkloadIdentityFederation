@@ -139,11 +139,12 @@ end
 # we can not include slack incoming webhook in sourcecode for security reasons,
 # also the webhook would be revoked immediately when you commit it to github(interesting spec.)
 slack_endpoint = ARGV[0]
-iam_policies_path = ARGV[1]
-resources_diff = ARGV[2]
+new_iam_policies_path = ARGV[1]
+old_iam_policies_path = ARGV[2]
+resources_diff = ARGV[3]
 
-puts "iam policies path is #{iam_policies_path}"
-
+puts "newest iam policies path is #{new_iam_policies_path}"
+puts "old iam policies path is #{old_iam_policies_path}"
 puts "resources_diff is #{resources_diff}"
 
 resources_info = gcp_resources_modification_summary(resources_diff)
@@ -155,4 +156,4 @@ notifier = Slack::Notifier.new slack_endpoint
 notifier.post(blocks: asset_modification_summary)
 
 # for Test
-# bundle exec ruby app.rb #{slack_incoming_webhook} #{iam_policies_path} #{resource_diff_json_array}
+# bundle exec ruby app.rb #{slack_incoming_webhook} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
