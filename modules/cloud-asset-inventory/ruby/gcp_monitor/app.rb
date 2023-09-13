@@ -38,7 +38,7 @@ def gcp_resources_modification_summary(resources_data)
   resources_array
 end
 
-def gcp_iam_policies_modification_summary()
+def gcp_iam_policies_modification_summary(iam_policies_path)
   # 今日の日付を取得
   today = Date.today
   # 昨日の日付を取得
@@ -52,29 +52,21 @@ def gcp_iam_policies_modification_summary()
   puts "Yesterday: #{formatted_yesterday}"
 
   # original(old)
-  file_name_yesterday = "iam-policies-#{formatted_yesterday}.json"
+  file_name_yesterday = File.join(iam_policies_path, "iam-policies-#{formatted_yesterday}.json")
   # new
-  file_name_today = "iam-policies-#{formatted_today}.json"
-  #============================Cloud Functions========================#
-  bucket_name = "cloud-asset-inventory-#{PROJECT_ID}"
-  storage = Google::Cloud::Storage.new
-  bucket = storage.bucket(bucket_name)
+  file_name_today = File.join(iam_policies_path, "iam-policies-#{formatted_today}.json")
 
-  file_yesterday = bucket.file(file_name_yesterday)
-  file_today = bucket.file(file_name_today)
-
-  content_yesterday = file_yesterday.download
-  content_yesterday.rewind
-  json_content_yesterday = content_yesterday.read
+  # get yesterday's iam policies json data
+  file_yesterday = File.open(file_name_yesterday, 'r')
+  json_content_yesterday = file_yesterday.read
   json_data_yesterday = JSON.parse(json_content_yesterday)
   puts "json_data_yesterday: #{json_data_yesterday}"
 
-  content_today = file_today.download
-  content_today.rewind
-  json_content_today = content_today.read
+  # get today's iam policies json data
+  file_today = File.open(file_name_today, 'r')
+  json_content_today = file_today.read
   json_data_today = JSON.parse(json_content_today)
   puts "json_data_today: #{json_data_today}"
-  #============================Cloud Functions========================#
 
   iam_policies_diff = Hashdiff.diff(json_data_yesterday, json_data_today)
 
@@ -147,8 +139,10 @@ end
 # we can not include slack incoming webhook in sourcecode for security reasons,
 # also the webhook would be revoked immediately when you commit it to github(interesting spec.)
 slack_endpoint = ARGV[0]
+iam_policies_path = ARGV[1]
+resources_diff = ARGV[2]
 
-resources_diff = ARGV[1]
+puts "iam policies path is #{iam_policies_path}"
 
 puts "resources_diff is #{resources_diff}"
 
@@ -161,4 +155,4 @@ notifier = Slack::Notifier.new slack_endpoint
 notifier.post(blocks: asset_modification_summary)
 
 # for Test
-# bundle exec ruby app.rb #{slack_incoming_webhook} #{json_array}
+# bundle exec ruby app.rb #{slack_incoming_webhook} #{iam_policies_path} #{resource_diff_json_array}
