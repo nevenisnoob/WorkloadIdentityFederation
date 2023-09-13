@@ -148,7 +148,7 @@ resources_diff = ARGV[0]
 
 puts "resources_diff is #{resources_diff}"
 
-slack_endpoint = "https://hooks.slack.com/services/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"
+slack_endpoint = "https://hooks.slack.com/services/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"
 
 resources_info = gcp_resources_modification_summary(resources_diff)
 # iam_policies_info = gcp_iam_policies_modification_summary()
