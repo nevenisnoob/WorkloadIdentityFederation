@@ -65,7 +65,7 @@ jobs:
         run: |
           gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json | jq '.' > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
           gsutil cp iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-${{ matrix.environment }}
-          echo "file_path=$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json" >> $GITHUB_OUTPUT
+          echo "file_path=iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json" >> $GITHUB_OUTPUT
       # Runs a set of commands using the runners shell
       # https://stackoverflow.com/a/74232400
       # https://github.com/github/docs/issues/21529
@@ -87,4 +87,4 @@ jobs:
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
           working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
-      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
+      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
