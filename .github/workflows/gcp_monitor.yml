@@ -61,7 +61,7 @@ jobs:
         id: download
         uses: actions/download-artifact@v3
         with:
-          name: iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}
+          # name: iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}
           path: cloud-asset-inventory/workload-idenity-dederation
       - name: display downloaded files
         run: ls -R
