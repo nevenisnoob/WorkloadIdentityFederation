@@ -61,7 +61,7 @@ jobs:
         id: download
         uses: actions/download-artifact@v3
         with:
-          name: iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}
+          name: iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.past_date }}
           path: cloud-asset-inventory/workload-idenity-dederation
       - name: display downloaded files
         run: ls -R
@@ -83,4 +83,4 @@ jobs:
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
           working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
-      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} ${{ steps.download.outputs.download-path }}/iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.current_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
+      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} ${{ steps.download.outputs.download-path }}/iam-policies-workload-idenity-federation-${{ steps.get_date.outputs.past_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
