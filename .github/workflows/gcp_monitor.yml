@@ -16,11 +16,8 @@ jobs:
     strategy:
       matrix:
         inclue:
-          # logoの方は実質誰にも使われてないので敢えて監視しなくてもよいかなと思って対象に入れてません
-          # - environment: dena-mbga-devsb-gcp
-          #   credentials: ${{ secrets.DENA_MBGA_DEVSB_GCP_CREDENTIALS }}
           - environment: workload-idenity-federation
-          credentials: ${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}
+            credentials: ${{ secrets.TERRAFORM_SERVICE_ACCOUNT_KEY }}
           # - environment: dena-opf-payment-dev-gcp
           #   credentials: ${{ secrets.DENA_OPF_PAYMENT_DEV_GCP_CREDENTIALS }}
           # TODO 本番
