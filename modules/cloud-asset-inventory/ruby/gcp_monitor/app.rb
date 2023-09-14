@@ -3,9 +3,6 @@ require 'hashdiff'
 require 'slack-notifier'
 require 'set'
 
-PROJECT_ID="workload-idenity-federation"
-
-puts "project id : #{PROJECT_ID}"
 
 def gcp_resources_modification_summary(resources_data)
   resources_array = []
@@ -38,23 +35,23 @@ def gcp_resources_modification_summary(resources_data)
   resources_array
 end
 
-def gcp_iam_policies_modification_summary(iam_policies_path)
-  # 今日の日付を取得
-  today = Date.today
-  # 昨日の日付を取得
-  yesterday = today - 1
-
-  # 日付を指定された形式にフォーマット
-  formatted_today = today.strftime('%Y-%m-%d')
-  formatted_yesterday = yesterday.strftime('%Y-%m-%d')
-
-  puts "Today: #{formatted_today}"
-  puts "Yesterday: #{formatted_yesterday}"
-
-  # original(old)
-  file_name_yesterday = File.join(iam_policies_path, "iam-policies-#{formatted_yesterday}.json")
-  # new
-  file_name_today = File.join(iam_policies_path, "iam-policies-#{formatted_today}.json")
+def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
+  # # 今日の日付を取得
+  # today = Date.today
+  # # 昨日の日付を取得
+  # yesterday = today - 1
+  #
+  # # 日付を指定された形式にフォーマット
+  # formatted_today = today.strftime('%Y-%m-%d')
+  # formatted_yesterday = yesterday.strftime('%Y-%m-%d')
+  #
+  # puts "Today: #{formatted_today}"
+  # puts "Yesterday: #{formatted_yesterday}"
+  #
+  # # original(old)
+  # file_name_yesterday = File.join(iam_policies_path, "iam-policies-#{formatted_yesterday}.json")
+  # # new
+  # file_name_today = File.join(iam_policies_path, "iam-policies-#{formatted_today}.json")
 
   # get yesterday's iam policies json data
   file_yesterday = File.open(file_name_yesterday, 'r')
@@ -139,21 +136,23 @@ end
 # we can not include slack incoming webhook in sourcecode for security reasons,
 # also the webhook would be revoked immediately when you commit it to github(interesting spec.)
 slack_endpoint = ARGV[0]
-new_iam_policies_path = ARGV[1]
-old_iam_policies_path = ARGV[2]
-resources_diff = ARGV[3]
+PROJECT_ID=ARGV[1]
+new_iam_policies_path = ARGV[2]
+old_iam_policies_path = ARGV[3]
+resources_diff = ARGV[4]
 
+
+puts "project id : #{PROJECT_ID}"
 puts "newest iam policies path is #{new_iam_policies_path}"
 puts "old iam policies path is #{old_iam_policies_path}"
 puts "resources_diff is #{resources_diff}"
 
 resources_info = gcp_resources_modification_summary(resources_diff)
-# iam_policies_info = gcp_iam_policies_modification_summary()
-iam_policies_info = []
+iam_policies_info = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
 asset_modification_summary = resources_info + iam_policies_info
 
 notifier = Slack::Notifier.new slack_endpoint
 notifier.post(blocks: asset_modification_summary)
 
 # for Test
-# bundle exec ruby app.rb #{slack_incoming_webhook} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
+# bundle exec ruby app.rb #{slack_incoming_webhook} #{project_id} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
