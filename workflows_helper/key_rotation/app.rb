@@ -13,6 +13,7 @@ require 'base64'
 
 def authenticate_with_gcp()
   service_account_key = JSON.parse(ENV['GCP_SA_KEY'])
+  puts "service_account_key is #{service_account_key}"
   authorizer = Google::Auth::ServiceAccountCredentials.make_creds(
     json_key_io: StringIO.new(service_account_key.to_json),
     scope: 'https://www.googleapis.com/auth/cloud-platform')
@@ -138,6 +139,7 @@ end
 
 gcp_project_id = ARGV[0]
 service_account_email = ARGV[1]
+personal_access_token = ENV['GITHUB_PAT']
 # old_sa_key_file_path = ARGV[2]
 # personal_access_token = ARGV[3]
 
@@ -159,7 +161,7 @@ gcp_authorizer = authenticate_with_gcp()
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
 
 # TODO 固定値を外部からもらうようにする
-update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", ENV['GCP_PAT'])
+update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", personal_access_token)
 puts update_key_result
 if update_key_result == 204
   result = delete_old_service_account_key(old_service_account_key, gcp_authorizer)
