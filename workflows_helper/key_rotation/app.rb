@@ -170,7 +170,6 @@ end
 
 
 # bundle exec ruby app.rb workload-idenity-federation terraform-github@workload-idenity-federation.iam.gserviceaccount.com
-# public_key = get_public_key("WorkloadIdentityFederation", "nevenisnoob", "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")
 # puts public_key
 
 # key 削除検証done
