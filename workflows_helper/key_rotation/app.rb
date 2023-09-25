@@ -49,13 +49,20 @@ def create_service_account_key(project_id, service_account_email, authorizer)
   return key
 end
 
+# https://googleapis.dev/ruby/google-apis-iam_v1/v0.48.0/Google/Apis/IamV1/IamService.html#delete_project_service_account_key-instance_method
 def delete_old_service_account_key(project_id, sa_email, sa_key_id, authorizer)
   iam_service = Google::Apis::IamV1::IamService.new
   iam_service.authorization = authorizer
 
   iam_service.delete_project_service_account_key(
     "projects/#{project_id}/serviceAccounts/#{sa_email}/keys/#{sa_key_id}"
-  )
+  ) do |result , err|
+    if err
+      puts "delete sa key failed: #{err}"
+    else
+      puts "delete sa key succeed: #{result}"
+    end
+  end
 end
 
 
