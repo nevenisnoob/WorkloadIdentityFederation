@@ -11,11 +11,14 @@ require 'base64'
 # for Test
 # bundle exec ruby app.rb #{slack_incoming_webhook} #{project_id} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
 
-def authenticate_with_gcp()
-  service_account_key = JSON.parse(ENV['GCP_SA_KEY'])
-  puts "service_account_key is #{service_account_key}"
+def get_current_sa_key()
+  sa_key = JSON.parse(ENV['GCP_SA_KEY'])
+  # puts old_sa_key_json["private_key_id"]
+end
+
+def authenticate_with_gcp(current_sa_key)
   authorizer = Google::Auth::ServiceAccountCredentials.make_creds(
-    json_key_io: StringIO.new(service_account_key.to_json),
+    json_key_io: StringIO.new(current_sa_key.to_json),
     scope: 'https://www.googleapis.com/auth/cloud-platform')
 
   # authorizer = Google::Auth::ServiceAccountCredentials.make_creds(
@@ -33,16 +36,16 @@ def create_service_account_key(project_id, service_account_email, authorizer)
     "projects/#{project_id}/serviceAccounts/#{service_account_email}",
     Google::Apis::IamV1::CreateServiceAccountKeyRequest.new)
 
-  puts key.name
-  puts key.key_origin #GOOGLE_PROVIDED
-  puts key.key_type #USER_MANAGED
-  puts key.private_key_data #本体。GCP consoleよりkey作成し、downloadしたjsonファイルの中身はこれ。
-  puts key.private_key_type #TYPE_GOOGLE_CREDENTIALS_FILE
-  puts key.public_key_data #KeyはUserで生成し、Googleにupした場合はpublic_key_data取得されると思う
+  # puts key.name
+  # puts key.key_origin #GOOGLE_PROVIDED
+  # puts key.key_type #USER_MANAGED
+  # puts key.private_key_data #本体。GCP consoleよりkey作成し、downloadしたjsonファイルの中身はこれ。
+  # puts key.private_key_type #TYPE_GOOGLE_CREDENTIALS_FILE
+  # puts key.public_key_data #KeyはUserで生成し、Googleにupした場合はpublic_key_data取得されると思う
   # ファイルに書き込む
-  File.open('new_service_account_key.json', 'w') do |file|
-    file.write(key.private_key_data)
-  end
+  # File.open('new_service_account_key.json', 'w') do |file|
+  #   file.write(key.private_key_data)
+  # end
   return key
 end
 
@@ -59,9 +62,9 @@ end
 # ref. https://docs.github.com/en/enterprise-server@3.8/rest/actions/secrets#create-or-update-a-repository-secret
 def update_github_secret(secret_name, secret_value, repo, owner, personal_access_token)
   public_key = get_public_key(repo, owner, personal_access_token)
-  puts public_key
+  # puts public_key
   encrypt_secret_value = encrypt_secret(public_key["key"], secret_value)
-  puts "encrypted secret value is #{encrypt_secret_value}"
+  # puts "encrypted secret value is #{encrypt_secret_value}"
 
   uri = URI.parse("https://api.github.com/repos/#{owner}/#{repo}/actions/secrets/#{secret_name}")
   request = Net::HTTP::Put.new(uri)
@@ -155,7 +158,8 @@ personal_access_token = ENV['GITHUB_PAT']
 # puts old_sa_key_json["client_email"]
 
 # gcp認証検証done
-gcp_authorizer = authenticate_with_gcp()
+current_sa_key = get_current_sa_key()
+gcp_authorizer = authenticate_with_gcp(current_sa_key)
 
 # key 生成検証done
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
@@ -163,8 +167,8 @@ new_sa_key = create_service_account_key(gcp_project_id, service_account_email, g
 # TODO 固定値を外部からもらうようにする
 update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", personal_access_token)
 puts update_key_result
-if update_key_result == 204
-  result = delete_old_service_account_key(old_service_account_key, gcp_authorizer)
+if update_key_result == 204 || update_key_result == "204"
+  result = delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
   puts "delete old service account key result(): #{result}"
 end
 
