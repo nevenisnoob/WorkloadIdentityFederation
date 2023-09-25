@@ -158,7 +158,8 @@ gcp_authorizer = authenticate_with_gcp()
 # key 生成検証done
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
 
-update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key["private_key_data"], "WorkloadIdentityFederation", "nevenisnoob", ENV['GCP_PAT'])
+# TODO 固定値を外部からもらうようにする
+update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", ENV['GCP_PAT'])
 puts update_key_result
 if update_key_result == 204
   result = delete_old_service_account_key(old_service_account_key, gcp_authorizer)
