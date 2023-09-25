@@ -11,7 +11,7 @@ require 'base64'
 # for Test
 # bundle exec ruby app.rb #{slack_incoming_webhook} #{project_id} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
 
-def authenticate_with_gcp(service_account_key_file)
+def authenticate_with_gcp()
   service_account_key = JSON.parse(ENV['GCP_SA_KEY'])
   authorizer = Google::Auth::ServiceAccountCredentials.make_creds(
     json_key_io: StringIO.new(service_account_key.to_json),
@@ -113,6 +113,7 @@ end
 # https://docs.github.com/en/enterprise-server@3.10/rest/guides/encrypting-secrets-for-the-rest-api?apiVersion=2022-11-28
 # https://rubygems.org/gems/rbnacl
 # https://libsodium.gitbook.io/doc/bindings_for_other_languages
+# brew install libsodium is necessary
 def encrypt_secret(public_key_string, secret_value)
   public_key_bytes = Base64.decode64(public_key_string)
 
@@ -157,11 +158,6 @@ gcp_authorizer = authenticate_with_gcp()
 # key 生成検証done
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
 
-# bundle exec ruby app.rb workload-idenity-federation terraform-github@workload-idenity-federation.iam.gserviceaccount.com
-
-# public_key = get_public_key("WorkloadIdentityFederation", "nevenisnoob", "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")
-# puts public_key
-
 update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key["private_key_data"], "WorkloadIdentityFederation", "nevenisnoob", ENV['GCP_PAT'])
 puts update_key_result
 if update_key_result == 204
@@ -170,6 +166,9 @@ if update_key_result == 204
 end
 
 
+# bundle exec ruby app.rb workload-idenity-federation terraform-github@workload-idenity-federation.iam.gserviceaccount.com
+# public_key = get_public_key("WorkloadIdentityFederation", "nevenisnoob", "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")
+# puts public_key
 
 # key 削除検証done
 #delete_old_service_account_key(gcp_project_id, service_account_email, old_sa_key_json["private_key_id"], gcp_authorizer)
