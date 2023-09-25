@@ -60,7 +60,7 @@ def delete_old_service_account_key(project_id, sa_email, sa_key_id, authorizer)
     if err
       puts "delete sa key failed: #{err}"
     else
-      puts "delete sa key succeed: #{result}"
+      puts "delete sa key succeed"
     end
   end
 end
@@ -175,8 +175,7 @@ new_sa_key = create_service_account_key(gcp_project_id, service_account_email, g
 update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", personal_access_token)
 puts update_key_result
 if update_key_result == 204 || update_key_result == "204"
-  result = delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
-  puts "delete old service account key result(): #{result}"
+  delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
 end
 
 
