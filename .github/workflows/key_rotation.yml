@@ -1,0 +1,51 @@
+# This is a basic workflow to help you get started with Actions
+
+name: gcp-monitor
+
+on:
+  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onschedule
+  # 毎月十日の夜中3時実行する(18 + 9 = 27)
+  schedule:
+    - cron: '0 18 10 * *'
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "monitoring"
+  monitoring:
+    strategy:
+      matrix:
+        include:
+          - environment: workload-idenity-federation
+            credentials: TERRAFORM_SERVICE_ACCOUNT_KEY
+          # - environment: dena-opf-payment-dev-gcp
+          #   credentials: ${{ secrets.DENA_OPF_PAYMENT_DEV_GCP_CREDENTIALS }}
+          # TODO 本番
+          # - environment: dena-mbga-sb-gcp
+          #   credentials:
+          # - environment: dena-mbga-gcp
+          #   credentials:
+          # - environment: dena-opf-payment-gcp
+          #   credentials:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/workflows_helper/key_rotation/Gemfile
+      GITHUB_PAT: ${{ secrets.PAT_HUANG }}
+      GCP_SA_KEY: ${{ secrets[matrix.credentials] }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ${{ github.workspace }}/workflows_helper/key_rotation/
+      - name: Rotate keys and update GitHub Secrets
+        run: bundle exec ruby ${{ github.workspace }}/workflows_helper/key_rotation/app.rb ${{ matrix.environment }} terraform-github@${{ matrix.environment }}.iam.gserviceaccount.com
+        env:
+          GCP_SA_KEY: ${{ secrets[matrix.credentials] }}
+          GITHUB_PAT: ${{ secrets.PAT_HUANG }}

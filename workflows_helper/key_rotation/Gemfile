@@ -1,0 +1,9 @@
+source "https://rubygems.org"
+
+# Include the Ruby Functions Framework as a dependency.
+gem 'googleauth', '~> 1.8', '>= 1.8.1'
+gem 'google-apis-iam_v1', '~> 0.48.0'
+gem 'rbnacl', '~> 7.1', '>= 7.1.1'
+
+# Other function dependencies, for example:
+# gem "package", "~> version"
