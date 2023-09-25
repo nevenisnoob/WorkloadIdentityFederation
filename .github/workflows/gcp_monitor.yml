@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BUNDLE_GEMFILE: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/Gemfile
+      BUNDLE_GEMFILE: ${{ github.workspace }}/workflows_helper/gcp_monitor/Gemfile
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -77,11 +77,12 @@ jobs:
             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
             --format="json(name, displayName, assetType, project, createTime, updateTime)")"
           echo "resources_diff=$RESOURCES_MONITOR_RESULT" >> GITHUB_OUTPUT
-      - name: diff_processing
+      - name: set up ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
-          working-directory: ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor
-      - run: bundle exec ruby ${{ github.workspace }}/modules/cloud-asset-inventory/ruby/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
+          working-directory: ${{ github.workspace }}/workflows_helper/gcp_monitor
+      - name: diff_processing
+        run: bundle exec ruby ${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json ${{ steps.get_resources_diff.outputs.resources_diff }}
