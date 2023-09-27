@@ -4,23 +4,26 @@ require 'slack-notifier'
 require 'set'
 
 
-def gcp_resources_modification_summary(resources_data)
+def gcp_resources_modification_summary(resource_diff_path)
+  resource_diff = File.open(resource_diff_path, 'r')
+  resource_idff_content = resource_diff.read
+  resource_idff_json = JSON.parse(resource_idff_content)
+  puts "resource_idff_json: #{resource_idff_json}"
   resources_array = []
   # TODO change projectId
   resources_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったResources"))
-  if !resources_data
+  if !resource_idff_json
     resource_markdown_text = "*なし*"
     resources_array.push(slack_block_section(resource_markdown_text))
     resources_array.push(slack_block_divider())
     return resources_array
   end
-  resources_json = JSON.parse(resources_data)
-  if resources_json.empty?
+  if resource_idff_json.empty?
     resource_markdown_text = "*なし*"
     resources_array.push(slack_block_section(resource_markdown_text))
     resources_array.push(slack_block_divider())
   else
-    resources_json.each do |resource|
+    resource_idff_json.each do |resource|
       resource_markdown_text = ""
       resource_markdown_text+="*name*: #{resource["name"]}\n"
       resource_markdown_text+="*assetType*: #{resource["assetType"]}\n"
@@ -139,15 +142,15 @@ slack_endpoint = ARGV[0]
 PROJECT_ID=ARGV[1]
 new_iam_policies_path = ARGV[2]
 old_iam_policies_path = ARGV[3]
-resources_diff = ARGV[4]
+resource_diff_path = ARGV[4]
 
 
 puts "project id : #{PROJECT_ID}"
 puts "newest iam policies path is #{new_iam_policies_path}"
 puts "old iam policies path is #{old_iam_policies_path}"
-puts "resources_diff is #{resources_diff}"
+puts "resources diff path is #{resource_diff_path}"
 
-resources_info = gcp_resources_modification_summary(resources_diff)
+resources_info = gcp_resources_modification_summary(resource_diff_path)
 iam_policies_info = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
 asset_modification_summary = resources_info + iam_policies_info
 
