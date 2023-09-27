@@ -77,6 +77,8 @@ jobs:
             --query='updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}' \
             --format='json(name, displayName, assetType, project, createTime, updateTime)')" >> GITHUB_OUTPUT
           echo "$resources_diff"
+          echo hello world!
+          echo "helloworld"
       - name: set up ruby
         uses: ruby/setup-ruby@v1
         with:
