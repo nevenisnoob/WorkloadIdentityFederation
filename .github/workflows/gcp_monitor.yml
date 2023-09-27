@@ -77,10 +77,10 @@ jobs:
              --query='updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}' \
              --format='json(name, displayName, assetType, project, createTime, updateTime)')"
             echo "resources_diff=$RESOURCES_MONITOR_RESULT" >> GITHUB_OUTPUT
-            echo "$RESOURCES_MONITOR_RESULT"
-            echo "$resources_diff"
-            echo hello world!
-            echo "helloworld"
+            echo "RESOURCES_MONITOR_RESULT is $RESOURCES_MONITOR_RESULT"
+            echo "temp=$RESOURCES_MONITOR_RESULT"
+            echo "temp is $temp"
+            echo "resources_diff is $resources_diff"
       # - name: set up ruby
       #   uses: ruby/setup-ruby@v1
       #   with:
