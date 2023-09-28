@@ -84,4 +84,4 @@ jobs:
           bundler-cache: true
           working-directory: ${{ github.workspace }}/workflows_helper/gcp_monitor
       - name: diff_processing
-        run: TZ=Asia/Tokyo bundle exec ruby ${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} '$GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }}' '$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json' '${{ steps.get_resources_diff.outputs.file_path }}'
+        run: TZ=Asia/Tokyo bundle exec ruby ${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }}" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "${{ steps.get_resources_diff.outputs.file_path }}"
