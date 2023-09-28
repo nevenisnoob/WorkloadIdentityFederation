@@ -53,11 +53,8 @@ jobs:
         # 月曜の場合、三日前の日付を取得します
         # それ以外の場合、一日前の日付を取得します
         run: |
-          PAST_DATE=$(date -d "1 day ago" '+%Y-%m-%d')
-          echo "past_date=$PAST_DATE" >> $GITHUB_OUTPUT
-          echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-          TZ=Asia/Tokyo date -d '6 hours ago' +'%Y-%m-%d'
-          date -d '6 hours ago' +'%Y-%m-%d'
+          echo "past_date=$(TZ=Asia/Tokyo date -d '1 day ago' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "current_date=$(TZ=Asia/Tokyo date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         shell: bash
       # - name: search for all iam policies
       #   id: get_current_iam_policies
@@ -87,4 +84,4 @@ jobs:
       #     bundler-cache: true
       #     working-directory: ${{ github.workspace }}/workflows_helper/gcp_monitor
       - name: diff_processing
-        run: bundle exec ruby ${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json '${{ steps.get_resources_diff.outputs.file_path }}'
+        run: TZ=Asia/Tokyo bundle exec ruby ${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} $GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }} $GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json '${{ steps.get_resources_diff.outputs.file_path }}'
