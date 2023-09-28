@@ -56,8 +56,8 @@ jobs:
           PAST_DATE=$(date -d "1 day ago" '+%Y-%m-%d')
           echo "past_date=$PAST_DATE" >> $GITHUB_OUTPUT
           echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-          TZ=Asia/Tokyo date -v-6H +'%Y-%m-%d'
-          date -v-6H +'%Y-%m-%d'
+          TZ=Asia/Tokyo date -d '6 hours ago' +'%Y-%m-%d'
+          date -d '6 hours ago' +'%Y-%m-%d'
         shell: bash
       # - name: search for all iam policies
       #   id: get_current_iam_policies
