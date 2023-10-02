@@ -166,9 +166,9 @@ def get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_tok
   JSON.parse(res.body)['workflow_runs'].first
 end
 
-def wait_for_workflow_completion(token, repo, workflow_file)
+def wait_for_workflow_completion(repo, repo_owner, workflow_file, personal_access_token)
   loop do
-    run = get_latest_workflow_run(token, repo, workflow_file)
+    run = get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_token)
     status = run['status']
     conclusion = run['conclusion']
 
@@ -222,7 +222,7 @@ if key_rotation_validation_result == "204"
   puts "update temp sa key for rotation validation succeed."
   if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
     puts "trigger key rotation validator workflow succeed."
-    success = wait_for_workflow_completion(token, repo, workflow_file)
+    success = wait_for_workflow_completion(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
     if !success
       puts "key rotation validation failed, do not update the sa key"
       return
