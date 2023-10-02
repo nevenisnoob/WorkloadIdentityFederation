@@ -1,32 +1,24 @@
-# This is a basic workflow to help you get started with Actions
-
 name: key-rotation-validator
 
 on:
-  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onschedule
-  # 毎月十日の夜中3時実行する(18 + 9 = 27)
+  # triggerは key_rotation workflow
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "monitoring"
-  key_rotation:
+  key_rotation_validation:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v1'
         with:
+          # key_rotation workflowより更新されたTEMP SA KEYを利用してGCP認証を行う
           credentials_json: '${{ secrets.TEMP_SA_KEY_FOR_ROTATION_VALIDATION }}'
-      - name: Sleep
-        run: sleep 10
       - name: Display current time
-        run: echo "The current time is $(date)"
+        # 現在時刻を出力します。これを持って、key_rotation workflowより発火した
+        # key_rotation_validator workflowが今回実行された本workflowは同じかどうかを確認します
+        run: TZ=Asia/Tokyo echo "The current time is $(date)"
       - name: run gcloud command to validate the new sa key
         run: |
-          gcloud info
-          gcloud auth list
+          TZ=Asia/Tokyo gcloud info

@@ -45,7 +45,7 @@ jobs:
           bundler-cache: true
           working-directory: ${{ github.workspace }}/workflows_helper/key_rotation/
       - name: Rotate keys and update GitHub Secrets
-        run: bundle exec ruby ${{ github.workspace }}/workflows_helper/key_rotation/app.rb ${{ matrix.environment }} terraform-github@${{ matrix.environment }}.iam.gserviceaccount.com
+        run: TZ=Asia/Tokyo bundle exec ruby ${{ github.workspace }}/workflows_helper/key_rotation/app.rb ${{ matrix.environment }} terraform-github@${{ matrix.environment }}.iam.gserviceaccount.com
         env:
           GCP_SA_KEY: ${{ secrets[matrix.credentials] }}
           GITHUB_PAT: ${{ secrets.PAT_HUANG }}
