@@ -167,6 +167,8 @@ def get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_tok
 end
 
 def wait_for_workflow_completion(repo, repo_owner, workflow_file, personal_access_token)
+  # sleep 10 seconds firstly
+  sleep(10)
   loop do
     run = get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_token)
     puts run
