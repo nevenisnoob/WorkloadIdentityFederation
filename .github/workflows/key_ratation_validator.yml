@@ -22,6 +22,8 @@ jobs:
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.TEMP_SA_KEY_FOR_ROTATION_VALIDATION }}'
+      - name: Sleep
+        run: sleep 10
       - name: run gcloud command to validate the new sa key
         run: |
           gcloud info
