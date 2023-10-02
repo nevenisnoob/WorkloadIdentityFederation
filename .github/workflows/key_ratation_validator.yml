@@ -23,4 +23,6 @@ jobs:
         with:
           credentials_json: '${{ secrets.TEMP_SA_KEY_FOR_ROTATION_VALIDATION }}'
       - name: run gcloud command to validate the new sa key
-        run: gcloud info
+        run: |
+          gcloud info
+          gcloud auth list

@@ -191,9 +191,12 @@ encrypt_sa_key = encrypt_secret(github_public_key["key"], new_sa_key.private_key
 key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
 puts key_rotation_validation_result
 if key_rotation_validation_result == "204"
+  puts "update temp sa key for rotation validation succeed."
   if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
+    puts "run key rotation validator workflow succeed."
     update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
     if update_key_result == "204"
+      puts "pudate sa key succeed"
       delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
     else
       puts "update sa key failed"
