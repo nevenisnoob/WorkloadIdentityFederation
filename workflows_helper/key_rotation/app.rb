@@ -169,6 +169,7 @@ end
 def wait_for_workflow_completion(repo, repo_owner, workflow_file, personal_access_token)
   loop do
     run = get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_token)
+    puts run
     status = run['status']
     conclusion = run['conclusion']
 
