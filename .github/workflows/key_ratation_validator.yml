@@ -18,7 +18,7 @@ jobs:
       - name: Display current time
         # 現在時刻を出力します。これを持って、key_rotation workflowより発火した
         # key_rotation_validator workflowが今回実行された本workflowは同じかどうかを確認します
-        run: TZ=Asia/Tokyo echo "The current time is $(date)"
+        run: TZ=Asia/Tokyo date
       - name: run gcloud command to validate the new sa key
         run: |
           TZ=Asia/Tokyo gcloud info
