@@ -67,12 +67,7 @@ end
 
 
 # ref. https://docs.github.com/en/enterprise-server@3.8/rest/actions/secrets#create-or-update-a-repository-secret
-def update_github_secret(secret_name, secret_value, repo, owner, personal_access_token)
-  public_key = get_public_key(repo, owner, personal_access_token)
-  # puts public_key
-  encrypt_secret_value = encrypt_secret(public_key["key"], secret_value)
-  # puts "encrypted secret value is #{encrypt_secret_value}"
-
+def update_github_secret(secret_name, encrypted_secret_value, repo, owner, personal_access_token)
   uri = URI.parse("https://api.github.com/repos/#{owner}/#{repo}/actions/secrets/#{secret_name}")
   request = Net::HTTP::Put.new(uri)
   request["Authorization"] = "Bearer #{personal_access_token}"
@@ -104,7 +99,7 @@ end
 # first create a personal access token, need to be classic, cuz classic PAT has no expiration limit.
 # scope: repo
 # pat: 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
-def get_public_key(repo, owner, personal_access_token)
+def get_github_public_key(repo, owner, personal_access_token)
   uri = URI.parse("https://api.github.com/repos/#{owner}/#{repo}/actions/secrets/public-key")
   request = Net::HTTP::Get.new(uri)
   request["Authorization"] = "Bearer #{personal_access_token}"
@@ -147,12 +142,27 @@ def encrypt_secret(public_key_string, secret_value)
   encrypted_message_base64 = Base64.strict_encode64(encrypted_message)
 end
 
+# https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28
+# workflow file name: key_ratation_validator.yml
+def trigger_validation_workflow(repo, repo_owner, workflow_file, personal_access_token)
+  uri = URI("https://api.github.com/repos/#{repo_owner}/#{repo}/actions/workflows/#{workflow_file}/dispatches")
+  req = Net::HTTP::Post.new(uri)
+  req['Authorization'] = "Bearer #{personal_access_token}"
+  req['Accept'] = 'application/vnd.github+json'
+  req.body = { ref: 'main' }.to_json
+
+  res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+  res.code == '204'
+end
+
 gcp_project_id = ARGV[0]
 service_account_email = ARGV[1]
 personal_access_token = ENV['GITHUB_PAT']
 # old_sa_key_file_path = ARGV[2]
 # personal_access_token = ARGV[3]
 
+repo = "WorkloadIdentityFederation"
+repo_owner = "nevenisnoob"
 
 # old_sa_key_file  = File.open(old_sa_key_file_path, 'r')
 #
@@ -171,14 +181,31 @@ gcp_authorizer = authenticate_with_gcp(current_sa_key)
 # key 生成検証done
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
 
+github_public_key = get_github_public_key(repo, repo_owner, personal_access_token)
+# puts public_key
+encrypt_sa_key = encrypt_secret(github_public_key["key"], new_sa_key.private_key_data)
+# puts "encrypted secret value is #{encrypt_secret_value}"
+
 # TODO 固定値を外部からもらうようにする
-update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", new_sa_key.private_key_data, "WorkloadIdentityFederation", "nevenisnoob", personal_access_token)
-puts update_key_result
-if update_key_result == 204 || update_key_result == "204"
-  delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
+key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", encrypt_sa_key, repo, repo_owner, personal_access_token)
+puts key_rotation_validation_result
+if key_rotation_validation_result == "204"
+  if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
+    update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", encrypt_sa_key, repo, repo_owner, personal_access_token)
+    if update_key_result == "204"
+      delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
+    else
+      puts "update sa key failed"
+    end
+  else
+    puts "key rotation validation failed"
+  end
+else
+  puts "update sa key for roatation validation failed"
 end
 
-
+# update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", encrypt_sa_key, repo, repo_owner, personal_access_token)
+#
 # bundle exec ruby app.rb workload-idenity-federation terraform-github@workload-idenity-federation.iam.gserviceaccount.com
 # puts public_key
 
