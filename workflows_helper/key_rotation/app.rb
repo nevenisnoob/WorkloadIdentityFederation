@@ -67,7 +67,7 @@ end
 
 
 # ref. https://docs.github.com/en/enterprise-server@3.8/rest/actions/secrets#create-or-update-a-repository-secret
-def update_github_secret(secret_name, encrypted_secret_value, repo, owner, personal_access_token)
+def update_github_secret(secret_name, public_key_id, encrypted_secret_value, repo, owner, personal_access_token)
   uri = URI.parse("https://api.github.com/repos/#{owner}/#{repo}/actions/secrets/#{secret_name}")
   request = Net::HTTP::Put.new(uri)
   request["Authorization"] = "Bearer #{personal_access_token}"
@@ -75,7 +75,7 @@ def update_github_secret(secret_name, encrypted_secret_value, repo, owner, perso
   request["X-GitHub-Api-Version"] = "2022-11-28"
   request.body = JSON.dump({
     "encrypted_value" => encrypted_secret_value,
-    "key_id" => public_key["key_id"],
+    "key_id" => public_key_id,
   })
 
   req_options = {
@@ -182,16 +182,17 @@ gcp_authorizer = authenticate_with_gcp(current_sa_key)
 new_sa_key = create_service_account_key(gcp_project_id, service_account_email, gcp_authorizer)
 
 github_public_key = get_github_public_key(repo, repo_owner, personal_access_token)
+github_public_key_id = github_public_key["key_id"]
 # puts public_key
 encrypt_sa_key = encrypt_secret(github_public_key["key"], new_sa_key.private_key_data)
 # puts "encrypted secret value is #{encrypt_secret_value}"
 
 # TODO 固定値を外部からもらうようにする
-key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", encrypt_sa_key, repo, repo_owner, personal_access_token)
+key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
 puts key_rotation_validation_result
 if key_rotation_validation_result == "204"
   if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
-    update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", encrypt_sa_key, repo, repo_owner, personal_access_token)
+    update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
     if update_key_result == "204"
       delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
     else
