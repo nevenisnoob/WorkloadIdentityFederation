@@ -74,7 +74,7 @@ def update_github_secret(secret_name, encrypted_secret_value, repo, owner, perso
   request["Accept"] = "application/vnd.github+json"
   request["X-GitHub-Api-Version"] = "2022-11-28"
   request.body = JSON.dump({
-    "encrypted_value" => encrypt_secret_value,
+    "encrypted_value" => encrypted_secret_value,
     "key_id" => public_key["key_id"],
   })
 
