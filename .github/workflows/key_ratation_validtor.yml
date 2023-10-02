@@ -11,26 +11,16 @@ on:
 jobs:
   # This workflow contains a single job called "monitoring"
   key_rotation:
-    strategy:
-      matrix:
-        include:
-          - environment: workload-idenity-federation
-            credentials: TEMP_SA_KEY_FOR_ROTATION_VALIDATION
-          # - environment: dena-opf-payment-dev-gcp
-          #   credentials: ${{ secrets.DENA_OPF_PAYMENT_DEV_GCP_CREDENTIALS }}
-          # TODO 本番
-          # - environment: dena-mbga-sb-gcp
-          #   credentials:
-          # - environment: dena-mbga-gcp
-          #   credentials:
-          # - environment: dena-opf-payment-gcp
-          #   credentials:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.TEMP_SA_KEY_FOR_ROTATION_VALIDATION }}'
       - name: run gcloud command to validate the new sa key
-        run: gcloud auth list
+        run: gcloud info
