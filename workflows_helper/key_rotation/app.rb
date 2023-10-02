@@ -155,6 +155,34 @@ def trigger_validation_workflow(repo, repo_owner, workflow_file, personal_access
   res.code == '204'
 end
 
+# https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28
+def get_latest_workflow_run(repo, repo_owner, workflow_file, personal_access_token)
+  uri = URI("https://api.github.com/repos/#{repo_owner}/#{repo}/actions/workflows/#{workflow_file}/runs")
+  req = Net::HTTP::Get.new(uri)
+  req['Authorization'] = "Bearer #{personal_access_token}"
+  req['Accept'] = 'application/vnd.github+json'
+
+  res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+  JSON.parse(res.body)['workflow_runs'].first
+end
+
+def wait_for_workflow_completion(token, repo, workflow_file)
+  loop do
+    run = get_latest_workflow_run(token, repo, workflow_file)
+    status = run['status']
+    conclusion = run['conclusion']
+
+    if status == 'completed'
+      puts "the key rotation validation workflow is completed: #{conclusion}"
+      return conclusion == 'success'
+    else
+      puts "the key rotation workflow is still running"
+      sleep(10)
+    end
+  end
+end
+
+
 gcp_project_id = ARGV[0]
 service_account_email = ARGV[1]
 personal_access_token = ENV['GITHUB_PAT']
@@ -193,7 +221,12 @@ puts key_rotation_validation_result
 if key_rotation_validation_result == "204"
   puts "update temp sa key for rotation validation succeed."
   if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
-    puts "run key rotation validator workflow succeed."
+    puts "trigger key rotation validator workflow succeed."
+    success = wait_for_workflow_completion(token, repo, workflow_file)
+    if !success
+      puts "key rotation validation failed, do not update the sa key"
+      return
+    end
     update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
     if update_key_result == "204"
       puts "pudate sa key succeed"
