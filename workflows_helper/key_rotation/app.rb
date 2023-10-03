@@ -7,10 +7,6 @@ require 'json'
 require 'rbnacl'
 require 'base64'
 
-
-# for Test
-# bundle exec ruby app.rb #{slack_incoming_webhook} #{project_id} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
-
 def get_current_sa_key()
   sa_key = JSON.parse(ENV['GCP_SA_KEY'])
   # puts old_sa_key_json["private_key_id"]
@@ -50,7 +46,7 @@ def create_service_account_key(project_id, service_account_email, authorizer)
 end
 
 # https://googleapis.dev/ruby/google-apis-iam_v1/v0.48.0/Google/Apis/IamV1/IamService.html#delete_project_service_account_key-instance_method
-def delete_old_service_account_key(project_id, sa_email, sa_key_id, authorizer)
+def delete_service_account_key(project_id, sa_email, sa_key_id, authorizer)
   iam_service = Google::Apis::IamV1::IamService.new
   iam_service.authorization = authorizer
 
@@ -218,31 +214,44 @@ github_public_key_id = github_public_key["key_id"]
 encrypt_sa_key = encrypt_secret(github_public_key["key"], new_sa_key.private_key_data)
 # puts "encrypted secret value is #{encrypt_secret_value}"
 
+
+def rollback_new_sa_key()
+  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
+end
+
 # TODO 固定値を外部からもらうようにする
 key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
-puts key_rotation_validation_result
-if key_rotation_validation_result == "204"
-  puts "update temp sa key for rotation validation succeed."
-  if trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
-    puts "trigger key rotation validator workflow succeed."
-    success = wait_for_workflow_completion(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
-    if !success
-      puts "key rotation validation failed, do not update the sa key"
-      return
-    end
-    update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
-    if update_key_result == "204"
-      puts "pudate sa key succeed"
-      delete_old_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
-    else
-      puts "update sa key failed"
-    end
-  else
-    puts "key rotation validation failed"
-  end
-else
+if key_rotation_validation_result != "204"
   puts "update sa key for roatation validation failed"
+  rollback_new_sa_key()
+  return
 end
+puts "update temp sa key for rotation validation succeed."
+
+if !trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
+  puts "trigger key rotation validation workflow failed"
+  rollback_new_sa_key()
+  return
+end
+puts "trigger key rotation validator workflow succeed."
+
+if !wait_for_workflow_completion(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
+  puts "key rotation validation failed, do not update the sa key"
+  rollback_new_sa_key()
+  return
+end
+puts "key rotation validation succeed"
+
+update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
+if update_key_result != "204"
+  puts "update sa key failed"
+  rollback_new_sa_key()
+  return
+end
+
+puts "pudate sa key succeed"
+delete_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
+
 
 # update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", encrypt_sa_key, repo, repo_owner, personal_access_token)
 #
@@ -250,4 +259,4 @@ end
 # puts public_key
 
 # key 削除検証done
-#delete_old_service_account_key(gcp_project_id, service_account_email, old_sa_key_json["private_key_id"], gcp_authorizer)
+#delete_service_account_key(gcp_project_id, service_account_email, old_sa_key_json["private_key_id"], gcp_authorizer)
