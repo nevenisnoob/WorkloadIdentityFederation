@@ -21,4 +21,4 @@ jobs:
         run: TZ=Asia/Tokyo date
       - name: run gcloud command to validate the new sa key
         run: |
-          TZ=Asia/Tokyo gcloud info
+          TZ=Asia/Tokyo gcloudd info
