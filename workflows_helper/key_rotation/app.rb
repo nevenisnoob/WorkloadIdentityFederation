@@ -215,29 +215,25 @@ encrypt_sa_key = encrypt_secret(github_public_key["key"], new_sa_key.private_key
 # puts "encrypted secret value is #{encrypt_secret_value}"
 
 
-def rollback_new_sa_key()
-  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
-end
-
 # TODO 固定値を外部からもらうようにする
 key_rotation_validation_result = update_github_secret("TEMP_SA_KEY_FOR_ROTATION_VALIDATION", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
 if key_rotation_validation_result != "204"
   puts "update sa key for roatation validation failed"
-  rollback_new_sa_key()
+  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
   return
 end
 puts "update temp sa key for rotation validation succeed."
 
 if !trigger_validation_workflow(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
   puts "trigger key rotation validation workflow failed"
-  rollback_new_sa_key()
+  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
   return
 end
 puts "trigger key rotation validator workflow succeed."
 
 if !wait_for_workflow_completion(repo, repo_owner, "key_ratation_validator.yml", personal_access_token)
   puts "key rotation validation failed, do not update the sa key"
-  rollback_new_sa_key()
+  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
   return
 end
 puts "key rotation validation succeed"
@@ -245,11 +241,11 @@ puts "key rotation validation succeed"
 update_key_result = update_github_secret("TERRAFORM_SERVICE_ACCOUNT_KEY", github_public_key_id, encrypt_sa_key, repo, repo_owner, personal_access_token)
 if update_key_result != "204"
   puts "update sa key failed"
-  rollback_new_sa_key()
+  delete_service_account_key(gcp_project_id, service_account_email, new_sa_key.private_key_data["private_key_id"], gcp_authorizer)
   return
 end
 
-puts "pudate sa key succeed"
+puts "udate sa key succeed, delete old sa key from google"
 delete_service_account_key(gcp_project_id, service_account_email, current_sa_key["private_key_id"], gcp_authorizer)
 
 
