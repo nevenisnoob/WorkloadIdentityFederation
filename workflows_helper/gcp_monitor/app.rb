@@ -65,7 +65,7 @@ def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
 
   iam_policies_diff = Hashdiff.diff(json_data_yesterday, json_data_today)
 
-  if iam_policy_diff.empty?
+  if iam_policies_diff.empty?
     return []
   end
 
