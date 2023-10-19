@@ -71,7 +71,7 @@ jobs:
       - name: get old iam policies file
         # gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
         run: |
-          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies.json . || (echo "Error downloading file from GCS." && exit 1)
+          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies.json . || (echo "Error downloading file from GCS, do nothing." && exit 0)
           date
         env:
           TZ: "Asia/Tokyo"
