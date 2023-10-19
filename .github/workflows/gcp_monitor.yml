@@ -68,7 +68,7 @@ jobs:
              --order-by="updateTime DESC, assetType" \
              --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
              --format="json(name, displayName, assetType, project, createTime, updateTime)" > resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-            bundle exec ruby "${{ github.workspace }}/workflow_helper/gcp_monitor/app.rb" -type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+            bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" -type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
       - name: search for all iam policies
         run: |
           gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
