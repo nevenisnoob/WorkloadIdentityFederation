@@ -1,7 +1,8 @@
 require 'json'
 require 'hashdiff'
 require 'slack-notifier'
-require 'set'
+require 'optparse'
+
 
 
 def gcp_resources_modification_summary(resource_diff_path)
@@ -127,29 +128,41 @@ def slack_block_section(text)
   }
 end
 
+options = {}
+OptionParser.new do |opts|
+  opts.on("--type=TYPE", "Set the type") do |type|
+    options[:type] = type
+  end
+end.parse!
+
 # we can not include slack incoming webhook in sourcecode for security reasons,
 # also the webhook would be revoked immediately when you commit it to github(interesting spec.)
 slack_endpoint = ARGV[0]
 PROJECT_ID=ARGV[1]
-new_iam_policies_path = ARGV[2]
-old_iam_policies_path = ARGV[3]
-resource_diff_path = ARGV[4]
-
 
 puts "project id : #{PROJECT_ID}"
-puts "newest iam policies path is #{new_iam_policies_path}"
-puts "old iam policies path is #{old_iam_policies_path}"
-puts "resources diff path is #{resource_diff_path}"
 
-resources_info = gcp_resources_modification_summary(resource_diff_path)
-iam_policies_info = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
-asset_modification_summary = resources_info + iam_policies_info
+# Now, options[:type] will contain the value passed with --type
+slack_message = []
+if options[:type] == "iam"
+  new_iam_policies_path = ARGV[2]
+  old_iam_policies_path = ARGV[3]
+  puts "newest iam policies path is #{new_iam_policies_path}"
+  puts "old iam policies path is #{old_iam_policies_path}"
+  slack_message = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
+elsif options[:type] == "other"
+  resource_diff_path = ARGV[2]
+  puts "resources diff path is #{resource_diff_path}"
+  slack_message = gcp_resources_modification_summary(resource_diff_path)
+else
+  puts "wrong value for type"
+end
 
-if asset_modification_summary.empty?
+if slack_message.empty?
   puts "since there is no change, do not send slack messages"
 else
   notifier = Slack::Notifier.new slack_endpoint
-  notifier.post(blocks: asset_modification_summary)
+  notifier.post(blocks: slack_message)
 end
 
 # for Test

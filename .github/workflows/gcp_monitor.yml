@@ -37,15 +37,12 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
-      - id: 'auth'
+      - name: 'GCP auth'
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets[matrix.credentials] }}'
-
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
-
       # Runs a single command using the runners shell
       - name: Get the date
         id: get_date
@@ -56,40 +53,31 @@ jobs:
         run: |
           echo "past_date=$(TZ=Asia/Tokyo date -d '1 day ago' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "current_date=$(TZ=Asia/Tokyo date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-          date
-          TZ=Asia/Tokyo date
         shell: bash
-      - name: search for all iam policies
-        id: get_current_iam_policies
-        run: |
-          gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-          gsutil cp iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-${{ matrix.environment }}
-          echo "file_path=iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json" >> $GITHUB_OUTPUT
-      # Runs a set of commands using the runners shell
-      # https://stackoverflow.com/a/74232400
-      # https://github.com/github/docs/issues/21529
-      - name: get old iam policies file
-        # gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
-        run: |
-          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies.json . || (echo "Error downloading file from GCS, do nothing." && exit 0)
-          date
-        env:
-          TZ: "Asia/Tokyo"
-      - name: search for all gcp resources
-        id: get_resources_diff
-        run: |
-           gcloud asset search-all-resources \
-             --scope=projects/${{ matrix.environment }} \
-             --order-by="updateTime DESC, assetType" \
-             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
-             --format="json(name, displayName, assetType, project, createTime, updateTime)" | jq '.' > resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-            echo "file_path=resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json" >> $GITHUB_OUTPUT
-      - name: set up ruby
+      - name: Set up ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
           working-directory: ${{ github.workspace }}/workflows_helper/gcp_monitor
-      - name: diff_processing
-        run: TZ=Asia/Tokyo bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/${{ steps.get_current_iam_policies.outputs.file_path }}" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "${{ steps.get_resources_diff.outputs.file_path }}"
+      - name: Search for all gcp resources
+        run: |
+           gcloud asset search-all-resources \
+             --scope=projects/${{ matrix.environment }} \
+             --order-by="updateTime DESC, assetType" \
+             --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
+             --format="json(name, displayName, assetType, project, createTime, updateTime)" > resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+            bundle exec ruby "${{ github.workspace }}/workflow_helper/gcp_monitor/app.rb" -type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+      - name: search for all iam policies
+        run: |
+          gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+          gsutil cp iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-${{ matrix.environment }}
+      # Runs a set of commands using the runners shell
+      # https://stackoverflow.com/a/74232400
+      # https://github.com/github/docs/issues/21529
+      - name: get old iam policies file
+        run: |
+          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
+      - name: iam policies diff calculate
+        run: bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" -type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json"
