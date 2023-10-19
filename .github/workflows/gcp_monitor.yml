@@ -32,6 +32,7 @@ jobs:
 
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/workflows_helper/gcp_monitor/Gemfile
+      TZ: "Asia/Tokyo"
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -68,8 +69,9 @@ jobs:
       # https://stackoverflow.com/a/74232400
       # https://github.com/github/docs/issues/21529
       - name: get old iam policies file
+        # gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
         run: |
-          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
+          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies.json . || (echo "Error downloading file from GCS." && exit 1)
           date
         env:
           TZ: "Asia/Tokyo"
