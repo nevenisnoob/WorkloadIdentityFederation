@@ -10,32 +10,27 @@ def gcp_resources_modification_summary(resource_diff_path)
   resource_idff_json = JSON.parse(resource_idff_content)
   puts "resource_idff_json: #{resource_idff_json}"
   resources_array = []
-  # TODO change projectId
-  resources_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったResources"))
   if !resource_idff_json
-    resource_markdown_text = "*なし*"
-    resources_array.push(slack_block_section(resource_markdown_text))
-    resources_array.push(slack_block_divider())
+    puts "resource diff json is nil"
     return resources_array
   end
   if resource_idff_json.empty?
-    resource_markdown_text = "*なし*"
+    puts "resource diff json is nil"
+    return resources_array
+  end
+  resources_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったResources"))
+  resource_idff_json.each do |resource|
+    resource_markdown_text = ""
+    resource_markdown_text+="*name*: #{resource["name"]}\n"
+    resource_markdown_text+="*assetType*: #{resource["assetType"]}\n"
+    resource_markdown_text+="*displayName*: #{resource["displayName"]}\n"
+    resource_markdown_text+="*project*: #{resource["project"]}\n"
+    resource_markdown_text+="*createTime*: #{resource["createTime"]}\n"
+    resource_markdown_text+="*updateTime*: #{resource["updateTime"]}\n"
     resources_array.push(slack_block_section(resource_markdown_text))
     resources_array.push(slack_block_divider())
-  else
-    resource_idff_json.each do |resource|
-      resource_markdown_text = ""
-      resource_markdown_text+="*name*: #{resource["name"]}\n"
-      resource_markdown_text+="*assetType*: #{resource["assetType"]}\n"
-      resource_markdown_text+="*displayName*: #{resource["displayName"]}\n"
-      resource_markdown_text+="*project*: #{resource["project"]}\n"
-      resource_markdown_text+="*createTime*: #{resource["createTime"]}\n"
-      resource_markdown_text+="*updateTime*: #{resource["updateTime"]}\n"
-      resources_array.push(slack_block_section(resource_markdown_text))
-      resources_array.push(slack_block_divider())
-    end
   end
-  resources_array
+  return resources_array
 end
 
 def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
@@ -70,7 +65,9 @@ def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
 
   iam_policies_diff = Hashdiff.diff(json_data_yesterday, json_data_today)
 
-  puts iam_policies_diff
+  if iam_policy_diff.empty?
+    return []
+  end
 
   diff_set_plus = Set.new
   diff_set_minus = Set.new
@@ -79,34 +76,28 @@ def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
   iam_policies_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったIAM Policies"))
 
   # JSON配列をループしてクエリを実行
-  if iam_policies_diff.empty?
-    iam_policy_markdown_text = "*なし*"
-    iam_policies_array.push(slack_block_section(iam_policy_markdown_text))
-    iam_policies_array.push(slack_block_divider())
-  else
-    iam_policies_diff.each do |iam_policy_diff|
-      sub_strings = iam_policy_diff[1].split('.')
-      # 文字列から整数を取得
-      index = sub_strings[0].gsub(/\D/, '').to_i
-      if iam_policy_diff[0] == "-"
-        iam_policy_markdown_text = ""
-        iam_policy_markdown_text+="*assetType*: #{json_data_yesterday[index]["assetType"]}\n"
-        iam_policy_markdown_text+="*resource*: #{json_data_yesterday[index]["resource"]}\n"
-        iam_policy_markdown_text+="に変更がありました。変更内容は以下：\n"
-        iam_policy_markdown_text+="```#{iam_policy_diff}```\n"
-        iam_policies_array.push(slack_block_section(iam_policy_markdown_text))
-      else
-        iam_policy_markdown_text = ""
-        iam_policy_markdown_text+="*assetType*: #{json_data_today[index]["assetType"]}\n"
-        iam_policy_markdown_text+="*resource*: #{json_data_today[index]["resource"]}\n"
-        iam_policy_markdown_text+="に変更がありました。変更内容は以下：\n"
-        iam_policy_markdown_text+="```#{iam_policy_diff}```\n"
-        iam_policies_array.push(slack_block_section(iam_policy_markdown_text))
-      end
-      iam_policies_array.push(slack_block_divider())
+  iam_policies_diff.each do |iam_policy_diff|
+    sub_strings = iam_policy_diff[1].split('.')
+    # 文字列から整数を取得
+    index = sub_strings[0].gsub(/\D/, '').to_i
+    if iam_policy_diff[0] == "-"
+      iam_policy_markdown_text = ""
+      iam_policy_markdown_text+="*assetType*: #{json_data_yesterday[index]["assetType"]}\n"
+      iam_policy_markdown_text+="*resource*: #{json_data_yesterday[index]["resource"]}\n"
+      iam_policy_markdown_text+="に変更がありました。変更内容は以下：\n"
+      iam_policy_markdown_text+="```#{iam_policy_diff}```\n"
+      iam_policies_array.push(slack_block_section(iam_policy_markdown_text))
+    else
+      iam_policy_markdown_text = ""
+      iam_policy_markdown_text+="*assetType*: #{json_data_today[index]["assetType"]}\n"
+      iam_policy_markdown_text+="*resource*: #{json_data_today[index]["resource"]}\n"
+      iam_policy_markdown_text+="に変更がありました。変更内容は以下：\n"
+      iam_policy_markdown_text+="```#{iam_policy_diff}```\n"
+      iam_policies_array.push(slack_block_section(iam_policy_markdown_text))
     end
+    iam_policies_array.push(slack_block_divider())
   end
-  iam_policies_array
+  return iam_policies_array
 end
 
 def slack_block_header(title)
@@ -154,8 +145,12 @@ resources_info = gcp_resources_modification_summary(resource_diff_path)
 iam_policies_info = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
 asset_modification_summary = resources_info + iam_policies_info
 
-notifier = Slack::Notifier.new slack_endpoint
-notifier.post(blocks: asset_modification_summary)
+if asset_modification_summary.empty?
+  puts "since there is no change, do not send slack messages"
+else
+  notifier = Slack::Notifier.new slack_endpoint
+  notifier.post(blocks: asset_modification_summary)
+end
 
 # for Test
 # bundle exec ruby app.rb #{slack_incoming_webhook} #{project_id} #{today_iam_policies_path} #{yesterday_iam_policies_path} #{resource_diff_json_array}
