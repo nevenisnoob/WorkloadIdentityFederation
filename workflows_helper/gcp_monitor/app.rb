@@ -145,11 +145,11 @@ puts "project id : #{PROJECT_ID}"
 # Now, options[:type] will contain the value passed with --type
 slack_message = []
 if options[:type] == "iam"
-  new_iam_policies_path = ARGV[2]
-  old_iam_policies_path = ARGV[3]
-  puts "newest iam policies path is #{new_iam_policies_path}"
-  puts "old iam policies path is #{old_iam_policies_path}"
-  slack_message = gcp_iam_policies_modification_summary(old_iam_policies_path, new_iam_policies_path)
+  yesterday_iam_policies_path = ARGV[2]
+  today_iam_policies_path = ARGV[3]
+  puts "yesterday iam policies path is #{yesterday_iam_policies_path}"
+  puts "today iam policies path is #{today_iam_policies_path}"
+  slack_message = gcp_iam_policies_modification_summary(yesterday_iam_policies_path, today_iam_policies_path)
 elsif options[:type] == "other"
   resource_diff_path = ARGV[2]
   puts "resources diff path is #{resource_diff_path}"
