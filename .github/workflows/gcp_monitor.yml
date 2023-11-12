@@ -35,7 +35,7 @@ jobs:
         shell: bash
         working-directory: ./workflows_helper/gcp_monitor
     env:
-      BUNDLE_GEMFILE: ./Gemfile
+      BUNDLE_GEMFILE: Gemfile
       TZ: "Asia/Tokyo"
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
