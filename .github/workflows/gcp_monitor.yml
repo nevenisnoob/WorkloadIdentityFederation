@@ -29,9 +29,13 @@ jobs:
           #   credentials:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    # https://docs.github.com/en/actions/using-jobs/setting-default-values-for-jobs
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./workflows_helper/gcp_monitor
     env:
-      BUNDLE_GEMFILE: ${{ github.workspace }}/workflows_helper/gcp_monitor/Gemfile
+      #BUNDLE_GEMFILE: ${{ github.workspace }}/workflows_helper/gcp_monitor/Gemfile
       TZ: "Asia/Tokyo"
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -60,7 +64,6 @@ jobs:
           ruby-version: '3.2'
           # なぜかcacheを使うとエラーになる
           bundler-cache: true
-          working-directory: ${{ github.workspace }}/workflows_helper/gcp_monitor
       - name: Search for all gcp resources
         run: |
            gcloud asset search-all-resources \
@@ -68,7 +71,7 @@ jobs:
              --order-by="updateTime DESC, assetType" \
              --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
              --format="json(name, displayName, assetType, project, createTime, updateTime)" > resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-            bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" --type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+            bundle exec ruby "app.rb" --type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
       - name: search for all iam policies
         run: |
           gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
@@ -80,4 +83,4 @@ jobs:
         run: |
           gcloud storage cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json .
       - name: iam policies diff calculate
-        run: bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
+        run: bundle exec ruby "app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
