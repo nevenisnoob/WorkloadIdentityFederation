@@ -72,12 +72,12 @@ jobs:
       - name: search for all iam policies
         run: |
           gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-          gsutil cp iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-${{ matrix.environment }}
+          gcloud storage cp iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json gs://cloud-asset-inventory-${{ matrix.environment }}
       # Runs a set of commands using the runners shell
       # https://stackoverflow.com/a/74232400
       # https://github.com/github/docs/issues/21529
       - name: get old iam policies file
         run: |
-          gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
+          gcloud storage cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json .
       - name: iam policies diff calculate
         run: bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
