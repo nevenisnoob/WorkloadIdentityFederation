@@ -51,8 +51,8 @@ jobs:
         # 月曜の場合、三日前の日付を取得します
         # それ以外の場合、一日前の日付を取得します
         run: |
-          echo "past_date=$(TZ=Asia/Tokyo date -d '1 day ago' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
-          echo "current_date=$(TZ=Asia/Tokyo date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "past_date=$(date -d '1 day ago' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         shell: bash
       - name: Set up ruby
         uses: ruby/setup-ruby@v1
@@ -68,7 +68,7 @@ jobs:
              --order-by="updateTime DESC, assetType" \
              --query="updateTime>=${{ steps.get_date.outputs.past_date }} OR createTime>=${{ steps.get_date.outputs.past_date }}" \
              --format="json(name, displayName, assetType, project, createTime, updateTime)" > resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
-            bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" -type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
+            bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" --type=other ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} resources-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
       - name: search for all iam policies
         run: |
           gcloud asset search-all-iam-policies --scope=projects/${{ matrix.environment }} --format=json > iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json
@@ -80,4 +80,4 @@ jobs:
         run: |
           gsutil cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json . || (echo "Error downloading file from GCS." && exit 1)
       - name: iam policies diff calculate
-        run: bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" -type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
+        run: bundle exec ruby "${{ github.workspace }}/workflows_helper/gcp_monitor/app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"

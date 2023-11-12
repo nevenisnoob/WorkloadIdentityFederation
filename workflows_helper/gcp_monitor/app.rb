@@ -3,8 +3,6 @@ require 'hashdiff'
 require 'slack-notifier'
 require 'optparse'
 
-
-
 def gcp_resources_modification_summary(resource_diff_path)
   resource_diff = File.open(resource_diff_path, 'r')
   resource_idff_content = resource_diff.read
@@ -35,23 +33,6 @@ def gcp_resources_modification_summary(resource_diff_path)
 end
 
 def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
-  # # 今日の日付を取得
-  # today = Date.today
-  # # 昨日の日付を取得
-  # yesterday = today - 1
-  #
-  # # 日付を指定された形式にフォーマット
-  # formatted_today = today.strftime('%Y-%m-%d')
-  # formatted_yesterday = yesterday.strftime('%Y-%m-%d')
-  #
-  # puts "Today: #{formatted_today}"
-  # puts "Yesterday: #{formatted_yesterday}"
-  #
-  # # original(old)
-  # file_name_yesterday = File.join(iam_policies_path, "iam-policies-#{formatted_yesterday}.json")
-  # # new
-  # file_name_today = File.join(iam_policies_path, "iam-policies-#{formatted_today}.json")
-
   # get yesterday's iam policies json data
   file_yesterday = File.open(file_name_yesterday, 'r')
   json_content_yesterday = file_yesterday.read
@@ -69,9 +50,6 @@ def gcp_iam_policies_modification_summary(file_name_yesterday, file_name_today)
   if iam_policies_diff.empty?
     return []
   end
-
-  diff_set_plus = Set.new
-  diff_set_minus = Set.new
 
   iam_policies_array = []
   iam_policies_array.push(slack_block_header("#{PROJECT_ID} 最近変更にあったIAM Policies"))
@@ -141,6 +119,7 @@ slack_endpoint = ARGV[0]
 PROJECT_ID=ARGV[1]
 
 puts "project id : #{PROJECT_ID}"
+puts "search for resource tpe: #{options[:type]}"
 
 # Now, options[:type] will contain the value passed with --type
 slack_message = []
