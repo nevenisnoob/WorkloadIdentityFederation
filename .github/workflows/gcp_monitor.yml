@@ -83,4 +83,4 @@ jobs:
         run: |
           gcloud storage cp gs://cloud-asset-inventory-${{ matrix.environment }}/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json .
       - name: iam policies diff calculate
-        run: bundle exec ruby "app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "$GITHUB_WORKSPACE/iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
+        run: bundle exec ruby "app.rb" --type=iam ${{ secrets.SLACK_WEBHOOK_URL_FOR_GCP_MONITOR }} ${{ matrix.environment }} "iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.past_date }}.json" "iam-policies-${{ matrix.environment }}-${{ steps.get_date.outputs.current_date }}.json"
